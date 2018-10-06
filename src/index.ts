@@ -3,7 +3,7 @@ const libpeer = require("libpeer");
 
 /* Some APP Specific Details */
 const APP_ID = "BLABBEROMA";
-const appDataStore = new Store();
+const appDataStore = new AppDataStore();
 
 async function init() {
   // Create a client. Param is in multiaddr format.
@@ -12,8 +12,14 @@ async function init() {
   // Make sure we have a stream to write into.
   // This is to write the users status messages and images
   await libpeer.ensureStreams([
-    { name: "statusfeed", concatMessages: true, rotation: "size", maxKB: 1000 },
-    { name: "images", concatMessages: false, encrypt: false }
+    {
+      name: "statusfeed",
+      concatMessages: true,
+      rotation: "size",
+      rotationMaxSizeKB: 10,
+      retain: true
+    },
+    { name: "images", concatMessages: false, encrypt: false, retain: false }
   ]);
 
   // Get a list of peers
@@ -35,6 +41,10 @@ async function init() {
       writeImage(msg);
     });
   }
+}
+
+async function addPeer(peerUrl: string) {
+  await libpeer.addPeer(peerUrl);
 }
 
 async function writeToLocalDB(data: string) {
